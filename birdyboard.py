@@ -1,3 +1,8 @@
+class BirdyBoard:
+
+
+
+
 # PLANNING:
 # This is how all of my screen's should look when I finish the app.
 # I wanted to map them out here so that I could plan how to group my functions
