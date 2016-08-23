@@ -2,7 +2,15 @@ import os
 import sys
 from users import *
 
+user_list = None
 main_menu_display = True
+
+def set_user_list():
+  global user_list
+  user_list = deserialize_users()
+
+def set_chirps():
+  pass
 
 def main_menu_start():
 
@@ -111,28 +119,68 @@ def new_user_menu():
 
   # runs the function for instantiating a new class of user
   user = User(name, screenname)
-  print(user.name)
-  input("")
-    # Routes user to the next main screen
+  global user_list
+  user_list[user.uuid] = user
+  serialize_users(user_list)
+
+  # Routes user to the next main screen
+  logged_in_user_menu(user.uuid)
 
 def select_user_menu():
 
   global main_menu_display
   main_menu_display = False
+  getting_input = True
+  menu_error = False
+  menu_not_num = False
+
+  while getting_input == True:
+
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+    print("SELECT USER")
+    print("~~~~~~~~~~~")
+    print("")
+    # runs loop to read and print all usernames
+    counter = 1
+    temp_user_list = dict()
+    for key, value in user_list.items():
+      temp_user_list[counter] = value.uuid
+      print("{}. {}".format(counter, value.screenname))
+      counter += 1
+
+    print("{}. RETURN TO PREVIOUS MENU".format(counter))
+
+    if menu_error == True:
+      menu_error = False
+      print("Please pick an available option!")
+
+    if menu_not_num == True:
+      menu_not_num = False
+      print("Please choose the number next to your screenname!")
+
+    choice = input("> ")
+    # if user choice is == counter, should run the function for the start menu again
+    try:
+      if int(choice) == counter:
+        main_menu_display = True
+        main_menu_start()
+      elif int(choice) in temp_user_list:
+        getting_input = False
+        logged_in_user_menu(temp_user_list[int(choice)])
+      else:
+        menu_error = True
+    except ValueError:
+      menu_not_num = True
+
+def logged_in_user_menu(uuid):
 
   os.system('cls' if os.name == 'nt' else 'clear')
 
-  print("SELECT USER")
-  print("~~~~~~~~~~~")
-  print("")
-  # runs loop to read and print all usernames
-  counter = 1
-  print("{}. RETURN TO PREVIOUS MENU".format(counter))
-  username = int(input("> "))
-  # if user username is == counter, should run the function for the start menu again
-  if username == counter:
-    main_menu_display = True
-    main_menu_start()
+  print("Welcome {}! Area is still under construction, so come back soon!".format(user_list[uuid].screenname))
+
+  input(">")
+
 
 def view_public_menu():
 
@@ -159,4 +207,5 @@ def exit_app():
   print("Bye!")
   sys.exit()
 
+set_user_list()
 main_menu_start()
