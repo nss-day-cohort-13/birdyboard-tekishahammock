@@ -1,4 +1,15 @@
-class BirdyBoard:
+
+
+
+
+
+
+# class BirdyBoard():
+
+
+# if __name__ == '__main__':
+#   birdyboard = BirdyBoard()
+#   birdyboard.main_menu_start()
 
 
 
