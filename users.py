@@ -1,27 +1,40 @@
 import uuid
 import pickle
-import inspect
 
 class User:
   """Creates an instance of user on instantiation"""
   def __init__(self, name, screenname):
+    """Arguments:
+    - self - the User class, itself
+    - name - contents of name variable from menus.py in new_user_menu function
+    - screenname - contents of screenname variable from menus.py in new_user_menu function
+    """
+
     self.name = name
     self.screenname = screenname
+    # creates a new, unique uuid and saves it as a string instead of a uuid object
     self.uuid = str(uuid.uuid4())
 
-  # Testing returned values of instantiated User object:
-  # def __str__(self):
-  #   return 'name: {}, username: {}, uuid: {}'.format(self.name, self.screenname, self.uuid)
-
 def deserialize_users():
+  """deserializes the users.txt file"""
+
+  # will load last dump (which is entire serialized file)
   try:
     user_file = open('users.txt', 'rb')
     user_list = pickle.load(user_file)
+  # creates an empty dict as user_list if users.txt is empty
   except EOFError:
     user_list = {}
   return user_list
 
 def serialize_users(user_list):
+  """serializes user_list to the users.txt
+
+  Arguments:
+  - user_list - global variable from menus.py containing deserialized and updated user_list
+  """
+
+  # re-writes the whole users.txt file with whatever is currently being held in user_list
   user_file = open('users.txt', 'wb')
   pickle.dump(user_list, user_file)
 
