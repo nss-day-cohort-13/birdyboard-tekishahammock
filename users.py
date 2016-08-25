@@ -28,7 +28,7 @@ def deserialize_users():
   return user_list
 
 def serialize_users(user_list):
-  """serializes user_list to the users.txt
+  """serializes user_list to the users.txt file
 
   Arguments:
   - user_list - global variable from menus.py containing deserialized and updated user_list
