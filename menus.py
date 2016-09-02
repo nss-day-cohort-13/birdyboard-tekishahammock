@@ -5,7 +5,7 @@
 """
 
 # Things still to do(in order of priority):
-# Make serialize, deserialize, time-formating into service functions
+# Make time-formating into service function
 # Break up menus into their own files
 # Re-write view_all_chirps to be less redundant
 # Unittesting using coverage
@@ -16,6 +16,7 @@ import sys
 import users
 import chirps
 import convo
+import services
 
 USER_LIST = None
 CHIRP_LIST = None
@@ -24,17 +25,17 @@ CONVERSATIONS = None
 def set_user_list():
     """deserializes users.txt on app start, saves to global variable"""
     global USER_LIST
-    USER_LIST = users.deserialize_users()
+    USER_LIST = services.deserialize("users.txt")
 
 def set_chirps():
     """deserializes chirps.txt on app start, saves to global variable"""
     global CHIRP_LIST
-    CHIRP_LIST = chirps.deserialize_chirps()
+    CHIRP_LIST = services.deserialize("chirps.txt")
 
 def set_conversations():
     """deserializes convo.txt on app start, saves to global variable"""
     global CONVERSATIONS
-    CONVERSATIONS = convo.deserialize_convo()
+    CONVERSATIONS = services.deserialize("convo.txt")
 
 def main_menu_start():
     """Runs the main menu. Routes user to chosen menu option and corresponding functions"""
@@ -171,7 +172,7 @@ def new_user_menu():
                 user = users.User(name, screenname)
                 # adds the new user to the global USER_LIST and serializes the new list
                 USER_LIST[user.uuid] = user
-                users.serialize_users(USER_LIST)
+                services.serialize("users.txt", USER_LIST)
 
                 # routes user to the logged_in menu screen, passes along current user uuid
                 logged_in_user_menu(user.uuid)
@@ -712,7 +713,7 @@ def reply_to_thread_menu(uuid, convo_id):
         else:
             chirp = chirps.Chirp(uuid, convo_id, reply_chirp)
             CHIRP_LIST[chirp.uuid] = chirp
-            chirps.serialize_chirps(CHIRP_LIST)
+            services.serialize("chirps.txt", CHIRP_LIST)
 
             new_reply_chirp_success(chirp, uuid)
             break
@@ -789,11 +790,11 @@ def new_public_chirp_menu(uuid):
         else:
             new_convo = convo.Conversation()
             CONVERSATIONS[new_convo.uuid] = new_convo
-            convo.serialize_convo(CONVERSATIONS)
+            services.serialize("convo.txt", CONVERSATIONS)
 
             chirp = chirps.Chirp(uuid, new_convo.uuid, pub_chirp)
             CHIRP_LIST[chirp.uuid] = chirp
-            chirps.serialize_chirps(CHIRP_LIST)
+            services.serialize("chirps.txt", CHIRP_LIST)
 
             new_public_chirp_success_menu(chirp, uuid)
             break
@@ -943,11 +944,11 @@ def new_private_chirp_menu(uuid, recip_uuid):
         else:
             new_convo = convo.Conversation(allowed_users, False)
             CONVERSATIONS[new_convo.uuid] = new_convo
-            convo.serialize_convo(CONVERSATIONS)
+            services.serialize("convo.txt", CONVERSATIONS)
 
             chirp = chirps.Chirp(uuid, new_convo.uuid, priv_chirp)
             CHIRP_LIST[chirp.uuid] = chirp
-            chirps.serialize_chirps(CHIRP_LIST)
+            services.serialize("chirps.txt", CHIRP_LIST)
 
             new_private_chirp_success_menu(chirp, uuid, recip_uuid)
             break
