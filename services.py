@@ -32,3 +32,30 @@ def serialize(filename, content):
     # re-writes the whole users.txt file with whatever is currently being held in user_list
     file = open(filename, 'wb')
     pickle.dump(content, file)
+
+def readable_time(value):
+    """makes the date/time object more readable
+
+    Arguments:
+    -
+    """
+        # formats time to be more human readable
+    # could be a service function
+    if value.hour > 12:
+        hour = value.hour - 12
+        time = "PM"
+    else:
+        hour = value.hour
+        time = "AM"
+    if value.minute < 10:
+        minute = "0{}".format(value.minute)
+    else:
+        minute = value.minute
+
+    day = value.day
+    month = value.month
+    year = value.year
+
+    formatted_value = (month, day, year, hour, minute, time)
+
+    return formatted_value

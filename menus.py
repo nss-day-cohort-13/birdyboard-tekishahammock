@@ -5,9 +5,8 @@
 """
 
 # Things still to do(in order of priority):
-# Make time-formating into service function
 # Break up menus into their own files
-# Re-write view_all_chirps to be less redundant
+# Condense view_public chirps into view_all_chirps
 # Unittesting using coverage
 # Go through comments to make them more cohesive and only used when nessesary
 
@@ -291,23 +290,10 @@ def view_public_menu():
 
                     # formats time to be more human readable
                     # could be a service function
-                    if value.timestamp.hour > 12:
-                        hour = value.timestamp.hour - 12
-                        time = "PM"
-                    else:
-                        hour = value.timestamp.hour
-                        time = "AM"
-                    if value.timestamp.minute < 10:
-                        minute = "0{}".format(value.timestamp.minute)
-                    else:
-                        minute = value.timestamp.minute
-
-                    day = value.timestamp.day
-                    month = value.timestamp.month
-                    year = value.timestamp.year
+                    timestamp = services.readable_time(value.timestamp)
 
                     chirp.append(counter)
-                    print("{}/{}/{} - {}:{} {}".format(month, day, year, hour, minute, time))
+                    print("{}/{}/{} - {}:{} {}".format(*timestamp))
                     print("{}. {}".format(counter, value.text))
                     counter += 1
 
@@ -420,6 +406,8 @@ def view_all_chirps_menu(uuid):
     - displays all chirps marked "private" and addressed to the user
     - routes user to expanded chirp thread
     """
+    # view_chirps_menu(uuid):
+        #
 
     # menu error variables to toggle visible error states from within while loop
     menu_error = False
@@ -434,8 +422,34 @@ def view_all_chirps_menu(uuid):
         # last chirp from the last 10 UPDATED convos
         # could also use enumerate
 
+        last_chirps = list()
 
-        counter = 1
+        for key in CONVERSATIONS:
+            chirps_in_convo = list()
+            for value in CHIRP_LIST.values():
+                if key == value.convo_id:
+                    chirps_in_convo.append([value.timestamp, value.uuid])
+            sorted_chirps_by_time = sorted(chirps_in_convo, reverse=True)
+            last_chirps.append(sorted_chirps_by_time[0])
+
+        public_convo_list = list()
+        private_convo_list = list()
+
+        for chirp in last_chirps:
+            current_convo_id = CHIRP_LIST[chirp[1]].convo_id
+            is_public = CONVERSATIONS[current_convo_id].public_status
+            if is_public is True:
+                public_convo_list.append(chirp)
+            elif is_public is False and uuid in CONVERSATIONS[current_convo_id].allowed_users:
+                private_convo_list.append(chirp)
+            else:
+                continue
+
+        sorted_public_chirps = sorted(public_convo_list, reverse=True)
+        sorted_private_chirps = sorted(private_convo_list, reverse=True)
+
+        last_ten_public = sorted_public_chirps[:10]
+        last_ten_private = sorted_private_chirps[:10]
 
         print("CHIRPS: PUBLIC AND PRIVATE")
         print("~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -443,102 +457,34 @@ def view_all_chirps_menu(uuid):
         print("")
         print("PUBLIC CONVERSATIONS:")
         print("---------------------")
-        public_convo_list = list()
-        for value in CONVERSATIONS.values():
-            if value.public_status is True:
-                public_convo_list.append([value.timestamp, value.uuid])
 
-        last_public_chirps = list()
-        for conversation in public_convo_list:
-            # for each conversation, loop through chirps to find matching chirps
-            public_chirp_list = list()
-            for value in CHIRP_LIST.values():
-                if conversation[1] == value.convo_id:
-                    # for matching chirps, append chirp timestamp and ID to temp list
-                    public_chirp_list.append([value.timestamp, value.uuid])
-                # now that convo_list is loaded, sort through chirps from newest to oldest
-                sorted_chirp_list = sorted(public_chirp_list, reverse=True)
-            # appends the item at index 0 to end of last public chirps
-            last_public_chirps.append(sorted_chirp_list[0])
-        # now we need to sort last_public_chirps and print in order of most recent
-        sorted_convo_by_chirp_list = sorted(last_public_chirps, reverse=True)
+        counter = 1
 
-        for chirp in sorted_convo_by_chirp_list:
-            for value in CHIRP_LIST.values():
-                if value.uuid == chirp[1]:
+        for chirp in last_ten_public:
+            current_chirp = CHIRP_LIST[chirp[1]]
 
-                    # formats time to be more human readable
-                    # could be a service function
-                    if value.timestamp.hour > 12:
-                        hour = value.timestamp.hour - 12
-                        time = "PM"
-                    else:
-                        hour = value.timestamp.hour
-                        time = "AM"
+            timestamp = services.readable_time(current_chirp.timestamp)
 
-                    if value.timestamp.minute < 10:
-                        minute = "0{}".format(value.timestamp.minute)
-                    else:
-                        minute = value.timestamp.minute
-
-                    day = value.timestamp.day
-                    month = value.timestamp.month
-                    year = value.timestamp.year
-
-                    chirp.append(counter)
-                    print("{}/{}/{} - {}:{} {}".format(month, day, year, hour, minute, time))
-                    print("{}. {}".format(counter, value.text))
-                    counter += 1
+            chirp.append(counter)
+            print("{}/{}/{} - {}:{} {}".format(*timestamp))
+            print("{}. {}".format(counter, current_chirp.text))
+            print("")
+            counter += 1
 
         print("")
         print("PRIVATE CONVERSATIONS:")
         print("----------------------")
-        private_convo_list = list()
-        for value in CONVERSATIONS.values():
-            if value.public_status is False and uuid in value.allowed_users:
-                private_convo_list.append([value.timestamp, value.uuid])
 
-        last_private_chirps = list()
-        for conversation in private_convo_list:
-            # for each conversation, loop through chirps to find matching chirps
-            private_chirp_list = list()
-            for value in CHIRP_LIST.values():
-                if conversation[1] == value.convo_id:
-                    # for matching chirps, append chirp timestamp and ID to temp list
-                    private_chirp_list.append([value.timestamp, value.uuid])
-                # now that convo_list is loaded, sort through chirps from newest to oldest
-                sorted_private_list = sorted(private_chirp_list, reverse=True)
-            # appends the item at index 0 to end of last public chirps
-            last_private_chirps.append(sorted_private_list[0])
-        # now we need to sort last_private_chirps and print in order of most recent
-        sorted_private_by_chirp_list = sorted(last_private_chirps, reverse=True)
+        for chirp in last_ten_private:
+            current_chirp = CHIRP_LIST[chirp[1]]
 
-        for chirp in sorted_private_by_chirp_list:
-            for value in CHIRP_LIST.values():
-                if value.uuid == chirp[1]:
+            timestamp = services.readable_time(current_chirp.timestamp)
 
-                    # formats time to be more human readable
-                    # could be a service function
-                    if value.timestamp.hour > 12:
-                        hour = value.timestamp.hour - 12
-                        time = "PM"
-                    else:
-                        hour = value.timestamp.hour
-                        time = "AM"
-
-                    if value.timestamp.minute < 10:
-                        minute = "0{}".format(value.timestamp.minute)
-                    else:
-                        minute = value.timestamp.minute
-
-                    day = value.timestamp.day
-                    month = value.timestamp.month
-                    year = value.timestamp.year
-
-                    chirp.append(counter)
-                    print("{}/{}/{} - {}:{} {}".format(month, day, year, hour, minute, time))
-                    print("{}. {}".format(counter, value.text))
-                    counter += 1
+            chirp.append(counter)
+            print("{}/{}/{} - {}:{} {}".format(*timestamp))
+            print("{}. {}".format(counter, current_chirp.text))
+            print("")
+            counter += 1
 
         print("")
         print("{}. RETURN TO PREVIOUS MENU".format(counter))
@@ -561,10 +507,10 @@ def view_all_chirps_menu(uuid):
                 logged_in_user_menu(uuid)
                 break
             elif int(choice) in range(1, counter):
-                for chirp in sorted_convo_by_chirp_list:
+                for chirp in last_ten_public:
                     if int(choice) == chirp[2]:
                         view_chirp_thread(uuid, chirp[1])
-                for chirp in sorted_private_by_chirp_list:
+                for chirp in last_ten_private:
                     if int(choice) == chirp[2]:
                         view_chirp_thread(uuid, chirp[1])
                 break
@@ -614,26 +560,12 @@ def view_chirp_thread(uuid, chirp_id, can_edit=True):
 
             # formats time to be more human readable
             # could be a service function
-            if chirp[0].hour > 12:
-                hour = chirp[0].hour - 12
-                time = "PM"
-            else:
-                hour = chirp[0].hour
-                time = "AM"
-            if chirp[0].minute < 10:
-                minute = "0{}".format(chirp[0].minute)
-            else:
-                minute = chirp[0].minute
 
-            day = chirp[0].day
-            month = chirp[0].month
-            year = chirp[0].year
+            timestamp = services.readable_time(chirp[0])
 
-            format_tuple = (month, day, year, hour, minute, time, USER_LIST[chirp[2]].screenname)
-
-            print("{}/{}/{} - {}:{} {} --- {}".format(*format_tuple))
+            print("{}/{}/{} - {}:{} {}".format(*timestamp))
             print("--------------------------------------")
-            print(chirp[1])
+            print(USER_LIST[chirp[2]].screenname, " --- ", chirp[1])
             print("")
 
         if can_edit is False:
@@ -725,23 +657,11 @@ def new_reply_chirp_success(chirp_data, uuid):
     os.system('cls' if os.name == 'nt' else 'clear')
 
     # formats time to be more human readable
-    if chirp_data.timestamp.hour > 12:
-        hour = chirp_data.timestamp.hour - 12
-        time = "PM"
-    else:
-        hour = chirp_data.timestamp.hour
-        time = "AM"
-
-    if chirp_data.timestamp.minute < 10:
-        minute = "0{}".format(chirp_data.timestamp.minute)
-    else:
-        minute = chirp_data.timestamp.minute
-
-    format_tuple = (hour, minute, time)
+    timestamp = services.readable_time(chirp_data.timestamp)
 
     print("SUCCESS!")
     print("~~~~~~~~")
-    print("You have successfully sent a reply chirp at {}:{} {}.".format(*format_tuple))
+    print("You have successfully sent a reply chirp on {}/{}/{} at {}:{} {}.".format(*timestamp))
     print("Please press any button to return to the main menu.")
     input("")
     # sends user back to logged_in menu
@@ -806,23 +726,11 @@ def new_public_chirp_success_menu(chirp_data, uuid):
     os.system('cls' if os.name == 'nt' else 'clear')
 
     # formats time to be more human readable
-    if chirp_data.timestamp.hour > 12:
-        hour = chirp_data.timestamp.hour - 12
-        time = "PM"
-    else:
-        hour = chirp_data.timestamp.hour
-        time = "AM"
-
-    if chirp_data.timestamp.minute < 10:
-        minute = "0{}".format(chirp_data.timestamp.minute)
-    else:
-        minute = chirp_data.timestamp.minute
-
-    format_tuple = (hour, minute, time)
+    timestamp = services.readable_time(chirp_data.timestamp)
 
     print("SUCCESS!")
     print("~~~~~~~~")
-    print("You have successfully created a new public chirp at {}:{} {}.".format(*format_tuple))
+    print("You have successfully created a new public chirp on {}/{}/{} at {}:{} {}.".format(*timestamp))
     print("Please press any button to return to the main menu.")
     input("")
     # sends user back to logged_in menu
@@ -960,23 +868,12 @@ def new_private_chirp_success_menu(chirp_data, uuid, recip_uuid):
     os.system('cls' if os.name == 'nt' else 'clear')
 
     # formats time to be more human readable
-    if chirp_data.timestamp.hour > 12:
-        hour = chirp_data.timestamp.hour - 12
-        time = "PM"
-    else:
-        hour = chirp_data.timestamp.hour
-        time = "AM"
-
-    if chirp_data.timestamp.minute < 10:
-        minute = "0{}".format(chirp_data.timestamp.minute)
-    else:
-        minute = chirp_data.timestamp.minute
-
-    format_tuple = (USER_LIST[recip_uuid].screenname, hour, minute, time)
+    timestamp = services.readable_time(chirp_data.timestamp)
 
     print("SUCCESS!")
     print("~~~~~~~~")
-    print("You have successfully created a new private chirp sent to {} at {}:{} {}.".format(*format_tuple))
+    print("You have successfully created a new private chirp on {}/{}/{} at {}:{} {}.".format(*timestamp))
+    print("It was sent to {}".format(USER_LIST[recip_uuid].screenname))
     print("Please press any button to return to the main menu.")
     input("")
     # sends user back to logged_in menu
