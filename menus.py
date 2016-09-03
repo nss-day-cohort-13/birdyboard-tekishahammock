@@ -4,12 +4,7 @@
 - Passes around user choices
 """
 
-# Things still to do(in order of priority):
-# Break up menus into their own files
-# Condense view_public chirps into view_all_chirps
-# Unittesting using coverage
-# Go through comments to make them more cohesive and only used when nessesary
-
+# imports
 import os
 import sys
 import users
@@ -17,6 +12,7 @@ import chirps
 import convo
 import services
 
+# constants
 USER_LIST = None
 CHIRP_LIST = None
 CONVERSATIONS = None
@@ -38,14 +34,12 @@ def set_conversations():
 
 def main_menu_start():
     """Runs the main menu. Routes user to chosen menu option and corresponding functions"""
-
     # menu error variables to toggle visible error states from within while loop
     menu_error = False
     menu_not_num = False
 
     # runs until loop is broken through picking a valid selection
     while True:
-
     # clears the command line/shell of other text outside of what prints in the while loop
         os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -102,8 +96,6 @@ def new_user_menu():
     - runs the serialize_users function
     - passes new uuid to logged_in menu function
     """
-
-    # menu error variables to toggle visible error states from within while loop
     name_length_error = False
     screenname_length_error = False
     screenname_match_error = False
@@ -112,8 +104,6 @@ def new_user_menu():
     screenname = None
 
     while True:
-
-        # clears the command line/shell of other text outside of what prints in the while loop
         os.system('cls' if os.name == 'nt' else 'clear')
 
         print("CREATE A NEW USER")
@@ -176,6 +166,7 @@ def new_user_menu():
                 # routes user to the logged_in menu screen, passes along current user uuid
                 logged_in_user_menu(user.uuid)
                 break
+        # handles error associated with len(screenname), since Nonetype object has no length
         except TypeError:
             pass
 
@@ -186,14 +177,10 @@ def select_user_menu():
     - collects the chosen user information
     - passes chosen uuid to logged_in menu function
     """
-
-    # menu error variables to toggle visible error states from within while loop
     menu_error = False
     menu_not_num = False
 
     while True:
-
-        # clears the command line/shell of other text outside of what prints in the while loop
         os.system('cls' if os.name == 'nt' else 'clear')
 
         print("SELECT USER")
@@ -213,12 +200,10 @@ def select_user_menu():
 
         print("{}. RETURN TO PREVIOUS MENU".format(counter))
 
-        # runs if user has put in number outside of menu range
         if menu_error is True:
             menu_error = False
             print("Please pick an available option!")
 
-        # runs if user has put in a non-number/invalid selection
         if menu_not_num is True:
             menu_not_num = False
             print("Please choose the number next to your screenname!")
@@ -226,7 +211,6 @@ def select_user_menu():
         choice = input("> ")
         # if user choice is == counter, should run the function for the start menu again
         # else if choice is a key in the temp_user_list dict, will run logged_in menu
-        # toggles the error variables
         try:
             if int(choice) == counter:
                 main_menu_start()
@@ -249,15 +233,11 @@ def logged_in_user_menu(uuid):
     - routes user to selected menu option and corresponding function
     - user can also log out or exit app from here
     """
-
-    # menu error variables to toggle visible error states from within while loop
     menu_error = False
     menu_not_num = False
 
-    # runs until user picks a valid option that breaks the while loop
     while True:
 
-        # clears the command line/shell of other text outside of what prints in the while loop
         os.system('cls' if os.name == 'nt' else 'clear')
 
         print("WELCOME {}!".format((USER_LIST[uuid].screenname).upper()))
@@ -269,12 +249,10 @@ def logged_in_user_menu(uuid):
         print("4. Log Out")
         print("5. Exit")
 
-        # runs if user has put in number outside of menu range
         if menu_error is True:
             menu_error = False
             print("Please pick an available option!")
 
-        # runs if user has put in a non-number/invalid selection
         if menu_not_num is True:
             menu_not_num = False
             print("Please choose the number of your chosen selection!")
@@ -282,7 +260,6 @@ def logged_in_user_menu(uuid):
         choice = input("> ")
 
         # attempts to route the user to the functions corresponding to their selection
-        # toggles global error variables if it reaches the end of the loop/hits an exception
         try:
             if int(choice) == 1:
                 # allows user to READ/REPLY to all chirps they have access to
@@ -304,10 +281,8 @@ def logged_in_user_menu(uuid):
                 # closes the program
                 exit_app()
             else:
-                # user has picked unavailable option, toggle global variable
                 menu_error = True
         except ValueError:
-            # user has picked NaN, toggle global variable
             menu_not_num = True
 
 def view_chirps_menu(uuid):
@@ -319,28 +294,32 @@ def view_chirps_menu(uuid):
     - if anonymous user, only displays public
     - routes user to expanded chirp thread
     """
-    # menu error variables to toggle visible error states from within while loop
     menu_error = False
     menu_not_num = False
 
     while True:
-
-        # clears the command line/shell of other text outside of what prints in the while loop
         os.system('cls' if os.name == 'nt' else 'clear')
 
+        # list of most recent chirp for all conversations
         last_chirps = list()
 
+        # loads last_chirp list
         for key in CONVERSATIONS:
+            # creates a list to hold all chirp-IDs and timestamps associated with a conversation
             chirps_in_convo = list()
             for value in CHIRP_LIST.values():
                 if key == value.convo_id:
                     chirps_in_convo.append([value.timestamp, value.uuid])
+            # sorts chirps_in_convo so most recent chirp is index 0
             sorted_chirps_by_time = sorted(chirps_in_convo, reverse=True)
+            # appends last chirp in each convo to last_chirps list
             last_chirps.append(sorted_chirps_by_time[0])
 
+        # list of last chirp in each public and private conversation
         public_convo_list = list()
         private_convo_list = list()
 
+        # loads public_convo_list and private_convo_list with last chirps
         for chirp in last_chirps:
             current_convo_id = CHIRP_LIST[chirp[1]].convo_id
             is_public = CONVERSATIONS[current_convo_id].public_status
@@ -351,12 +330,15 @@ def view_chirps_menu(uuid):
             else:
                 continue
 
+        # list of last chirp in each public and private conversation, sorted by timestamp
         sorted_public_chirps = sorted(public_convo_list, reverse=True)
         sorted_private_chirps = sorted(private_convo_list, reverse=True)
 
+        # # list of most recent 10 chirps each public and private conversations
         last_ten_public = sorted_public_chirps[:10]
         last_ten_private = sorted_private_chirps[:10]
 
+        # "if uuid is None" will handle what happens if user is viewing chirps anonymously
         if uuid is None:
             print("CHIRPS: * PUBLIC ONLY *")
         else:
@@ -374,11 +356,14 @@ def view_chirps_menu(uuid):
 
         counter = 1
 
+        # takes chirp ID from last 10 and loads the rest of the chirp info
         for chirp in last_ten_public:
             current_chirp = CHIRP_LIST[chirp[1]]
 
+            # formats visible timestamp to be more human readable
             timestamp = services.readable_time(current_chirp.timestamp)
 
+            # adds counter to individual chirp as temp option marker
             chirp.append(counter)
             print(counter, end="")
             print(". {}/{}/{} - {}:{} {}".format(*timestamp), end="")
@@ -404,12 +389,10 @@ def view_chirps_menu(uuid):
 
         print("")
         print("{}. RETURN TO PREVIOUS MENU".format(counter))
-        # runs if user has put in number outside of menu range
         if menu_error is True:
             menu_error = False
             print("Please pick an available option!")
 
-        # runs if user has put in a non-number/invalid selection
         if menu_not_num is True:
             menu_not_num = False
             print("Please choose the number next to your chosen chirp!")
@@ -417,7 +400,6 @@ def view_chirps_menu(uuid):
         choice = input("> ")
         # if user choice is == counter, should run the function for logged in menu again
         # else if choice is in the counter range grab the corresponding chirp in either list
-        # toggles the error variables if the user has picked something outside of the range
         try:
             if int(choice) == counter and uuid is None:
                 main_menu_start()
@@ -450,20 +432,19 @@ def view_chirp_thread(uuid, chirp_id):
     - sorts them so they display in order of oldest to newest
     - allows user to reply and add to the thread
     """
-
-    # menu error variables to toggle visible error states from within while loop
     menu_error = False
     menu_not_num = False
 
     while True:
-        # clears the command line/shell of other text outside of what prints in the while loop
         os.system('cls' if os.name == 'nt' else 'clear')
 
+        # loads all chirps associated with conversation into list
         current_convo_chirps = list()
         for value in CHIRP_LIST.values():
             if value.convo_id == CHIRP_LIST[chirp_id].convo_id:
                 current_convo_chirps.append([value.timestamp, value.text, value.user_id])
 
+        # sorts current_convo_chirps from oldest to newest
         sorted_current_convo_chirps = sorted(current_convo_chirps)
 
         print("CHIRP THREAD")
@@ -476,10 +457,6 @@ def view_chirp_thread(uuid, chirp_id):
         print("")
 
         for chirp in sorted_current_convo_chirps:
-
-            # formats time to be more human readable
-            # could be a service function
-
             timestamp = services.readable_time(chirp[0])
 
             print("{}/{}/{} - {}:{} {}".format(*timestamp))
@@ -492,12 +469,10 @@ def view_chirp_thread(uuid, chirp_id):
             print("1. REPLY")
             print("2. RETURN TO PREVIOUS MENU")
 
-        # runs if user has put in number outside of menu range
         if menu_error is True:
             menu_error = False
             print("Please pick an available option!")
 
-        # runs if user has put in a non-number/invalid selection
         if menu_not_num is True:
             menu_not_num = False
             print("Please choose the number next to your chosen chirp!")
@@ -531,11 +506,9 @@ def reply_to_thread_menu(uuid, convo_id):
     - attaches chirp to existing conversation
     - serializes chirps
     """
-
     text_length_error = False
 
     while True:
-        # clears the command line/shell of other text outside of what prints in the while loop
         os.system('cls' if os.name == 'nt' else 'clear')
 
         print("NEW REPLY CHIRP")
@@ -558,31 +531,30 @@ def reply_to_thread_menu(uuid, convo_id):
         elif reply_chirp == 'exit':
             logged_in_user_menu(uuid)
             break
-        # creates the new chirp and a new corresponding conversation
-        # serializes global variables for CONVERSATIONS and CHIRP_LIST
+        # creates the new chirp
+        # serializes global variables for CHIRP_LIST
         else:
             chirp = chirps.Chirp(uuid, convo_id, reply_chirp)
             CHIRP_LIST[chirp.uuid] = chirp
             services.serialize("chirps.txt", CHIRP_LIST)
 
-            new_reply_chirp_success(chirp, uuid)
+            new_chirp_success(chirp, uuid)
             break
 
-def new_reply_chirp_success(chirp_data, uuid):
+def new_chirp_success(chirp_data, uuid, recip_uuid=None):
     """confirms chirp success and transitions back to logged_in menu"""
-
-    # clears the command line/shell of other text outside of what prints after this point
     os.system('cls' if os.name == 'nt' else 'clear')
 
-    # formats time to be more human readable
     timestamp = services.readable_time(chirp_data.timestamp)
 
     print("SUCCESS!")
     print("~~~~~~~~")
-    print("You have successfully sent a reply chirp on {}/{}/{} at {}:{} {}.".format(*timestamp))
+    print("You have successfully sent a chirp on {}/{}/{} at {}:{} {}.".format(*timestamp))
+    if recip_uuid is not None:
+        print("It was sent to {}".format(USER_LIST[recip_uuid].screenname))
     print("Please press any button to return to the main menu.")
     input("")
-    # sends user back to logged_in menu
+    # sends user back to logged_in menu, regardless of input
     logged_in_user_menu(uuid)
 
 def new_public_chirp_menu(uuid):
@@ -596,18 +568,15 @@ def new_public_chirp_menu(uuid):
     - creates new chirp with passed in uuid and convo.uuid
     - serializes global variables CONVERSATIONS and CHIRP_LIST
     """
-
     text_length_error = False
 
     while True:
-        # clears the command line/shell of other text outside of what prints in the while loop
         os.system('cls' if os.name == 'nt' else 'clear')
 
         print("NEW CHIRP: PUBLIC")
         print("~~~~~~~~~~~~~~~~~")
         print("Enter chirp text (or enter 'exit' to return):")
 
-        # runs if user has hit enter without providing input
         if text_length_error is True:
             print("Chirp length cannot be 0 characters. Please provide valid input.")
         else:
@@ -615,11 +584,9 @@ def new_public_chirp_menu(uuid):
 
         pub_chirp = input("> ")
 
-        # toggles error variable for text_length if user has neglected to put in any input
         if len(pub_chirp) == 0:
             text_length_error = True
             continue
-        # lets user exit back to the previous menu
         elif pub_chirp == 'exit':
             logged_in_user_menu(uuid)
             break
@@ -634,25 +601,8 @@ def new_public_chirp_menu(uuid):
             CHIRP_LIST[chirp.uuid] = chirp
             services.serialize("chirps.txt", CHIRP_LIST)
 
-            new_public_chirp_success_menu(chirp, uuid)
+            new_chirp_success(chirp, uuid)
             break
-
-def new_public_chirp_success_menu(chirp_data, uuid):
-    """confirms chirp success and transitions back to logged_in menu"""
-
-    # clears the command line/shell of other text outside of what prints after this point
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-    # formats time to be more human readable
-    timestamp = services.readable_time(chirp_data.timestamp)
-
-    print("SUCCESS!")
-    print("~~~~~~~~")
-    print("You have successfully created a new public chirp on {}/{}/{} at {}:{} {}.".format(*timestamp))
-    print("Please press any button to return to the main menu.")
-    input("")
-    # sends user back to logged_in menu
-    logged_in_user_menu(uuid)
 
 def private_chirp_addressed_user(uuid):
     """determines who private chirp is meant to be addressed to
@@ -664,25 +614,16 @@ def private_chirp_addressed_user(uuid):
     - accepts user input to determine who the chosen recipient of private chirp is
     - runs new_private_chirp_menu() and passes along uuids
     """
-
-    # menu error variables to toggle visible error states from within while loop
     menu_error = False
     menu_not_num = False
 
     while True:
-
-        # clears the command line/shell of other text outside of what prints in the while loop
         os.system('cls' if os.name == 'nt' else 'clear')
 
         print("WHO IS THIS PRIVATE CHIRP ADDRESSED TO?")
         print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         print("")
-        # runs loop to read and print all usernames
-        # assigns a number to each screenname based on counter
-        # adds each number/uuid as key/value pair to temp dict
-        # matches number and screenname printed in command line/shell
         # does NOT include the name/uuid of the current user
-        # could also have used enumerate
         counter = 1
         temp_user_list = dict()
         for value in USER_LIST.values():
@@ -695,20 +636,16 @@ def private_chirp_addressed_user(uuid):
 
         print("{}. RETURN TO PREVIOUS MENU".format(counter))
 
-        # runs if user has put in number outside of menu range
         if menu_error is True:
             menu_error = False
             print("Please pick an available option!")
 
-        # runs if user has put in a non-number/invalid selection
         if menu_not_num is True:
             menu_not_num = False
             print("Please choose the number next to your screenname!")
 
         choice = input("> ")
-        # if user choice is == counter, should run the function for the start menu again
-        # else if choice is a key in the temp_user_list dict, will run logged_in menu
-        # toggles the error variables
+
         try:
             if int(choice) == counter:
                 logged_in_user_menu(uuid)
@@ -733,13 +670,10 @@ def new_private_chirp_menu(uuid, recip_uuid):
     - creates new chirp with passed in uuid and convo.uuid
     - serializes global variables CONVERSATIONS and CHIRP_LIST
     """
-
     allowed_users = (uuid, recip_uuid)
-
     text_length_error = False
 
     while True:
-        # clears the command line/shell of other text outside of what prints in the while loop
         os.system('cls' if os.name == 'nt' else 'clear')
 
         recip_screenname = USER_LIST[recip_uuid].screenname
@@ -749,7 +683,6 @@ def new_private_chirp_menu(uuid, recip_uuid):
         print("You are starting a new private conversation with {}".format(recip_screenname))
         print("Enter chirp text (or enter 'exit' to return):")
 
-        # runs if user has hit enter without providing input
         if text_length_error is True:
             print("Chirp length cannot be 0 characters. Please provide valid input.")
         else:
@@ -757,11 +690,9 @@ def new_private_chirp_menu(uuid, recip_uuid):
 
         priv_chirp = input("> ")
 
-        # toggles error variable for text_length if user has neglected to put in any input
         if len(priv_chirp) == 0:
             text_length_error = True
             continue
-        # lets user exit back to the previous menu
         elif priv_chirp == 'exit':
             logged_in_user_menu(uuid)
             break
@@ -776,30 +707,11 @@ def new_private_chirp_menu(uuid, recip_uuid):
             CHIRP_LIST[chirp.uuid] = chirp
             services.serialize("chirps.txt", CHIRP_LIST)
 
-            new_private_chirp_success_menu(chirp, uuid, recip_uuid)
+            new_chirp_success(chirp, uuid, recip_uuid)
             break
-
-def new_private_chirp_success_menu(chirp_data, uuid, recip_uuid):
-    """confirms chirp success and transitions back to logged_in menu"""
-
-    # clears the command line/shell of other text outside of what prints after this point
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-    # formats time to be more human readable
-    timestamp = services.readable_time(chirp_data.timestamp)
-
-    print("SUCCESS!")
-    print("~~~~~~~~")
-    print("You have successfully created a new private chirp on {}/{}/{} at {}:{} {}.".format(*timestamp))
-    print("It was sent to {}".format(USER_LIST[recip_uuid].screenname))
-    print("Please press any button to return to the main menu.")
-    input("")
-    # sends user back to logged_in menu
-    logged_in_user_menu(uuid)
 
 def exit_app():
     """exits the program"""
-    # clears the command line/shell of other text outside of what prints after this point
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Bye!")
     # runs system exit, which is the same as using an exit command in the command line/shell
