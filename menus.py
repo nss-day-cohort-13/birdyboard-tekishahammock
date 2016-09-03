@@ -82,7 +82,7 @@ def main_menu_start():
                 break
             elif int(choice) == 3:
                 # run function to READ ONLY all public chirps from chirps.txt
-                view_public_menu()
+                view_chirps_menu(None)
                 break
             elif int(choice) == 4:
                 # closes the program
@@ -239,94 +239,6 @@ def select_user_menu():
         except ValueError:
             menu_not_num = True
 
-def view_public_menu():
-    """Runs public chirps menu.
-
-    Actions:
-    - displays all chirps marked "public"
-    - routes user to expanded chirp thread
-    """
-
-    # menu error variables to toggle visible error states from within while loop
-    menu_error = False
-    menu_not_num = False
-
-    while True:
-
-        # clears the command line/shell of other text outside of what prints in the while loop
-        os.system('cls' if os.name == 'nt' else 'clear')
-
-        print("PUBLIC CHIRPS")
-        print("~~~~~~~~~~~~~")
-        print("* Please return to main menu and select a user to reply to chirps *")
-        print("")
-        # runs loop to read and print first part of first chirp in each chirp convo
-        # could also use enumerate
-        counter = 1
-
-        public_convo_list = list()
-        for value in CONVERSATIONS.values():
-            if value.public_status is True:
-                public_convo_list.append([value.timestamp, value.uuid])
-
-        last_public_chirps = list()
-        for conversation in public_convo_list:
-            # for each conversation, loop through chirps to find matching chirps
-            public_chirp_list = list()
-            for value in CHIRP_LIST.values():
-                if conversation[1] == value.convo_id:
-                    # for matching chirps, append chirp timestamp and ID to temp list
-                    public_chirp_list.append([value.timestamp, value.uuid])
-                # now that convo_list is loaded, sort through chirps from newest to oldest
-                sorted_chirp_list = sorted(public_chirp_list, reverse=True)
-            # appends the item at index 0 to end of last public chirps
-            last_public_chirps.append(sorted_chirp_list[0])
-        # now we need to sort last_public_chirps and print in order of most recent
-        sorted_convo_by_chirp_list = sorted(last_public_chirps, reverse=True)
-
-        for chirp in sorted_convo_by_chirp_list:
-            for value in CHIRP_LIST.values():
-                if value.uuid == chirp[1]:
-
-                    # formats time to be more human readable
-                    # could be a service function
-                    timestamp = services.readable_time(value.timestamp)
-
-                    chirp.append(counter)
-                    print("{}/{}/{} - {}:{} {}".format(*timestamp))
-                    print("{}. {}".format(counter, value.text))
-                    counter += 1
-
-        print("")
-        print("{}. RETURN TO PREVIOUS MENU".format(counter))
-        # runs if user has put in number outside of menu range
-        if menu_error is True:
-            menu_error = False
-            print("Please pick an available option!")
-
-        # runs if user has put in a non-number/invalid selection
-        if menu_not_num is True:
-            menu_not_num = False
-            print("Please choose the number next to your chosen chirp!")
-
-        choice = input("> ")
-        # if user choice is == counter, should run the function for logged in menu again
-        # else if choice is in temp_chirp_list
-        # toggles the error variables if the user has picked something outside of the range
-        try:
-            if int(choice) == counter:
-                main_menu_start()
-                break
-            elif int(choice) in range(1, counter):
-                for chirp in sorted_convo_by_chirp_list:
-                    if int(choice) == chirp[2]:
-                        view_chirp_thread(None, chirp[1], False)
-                        break
-            else:
-                menu_error = True
-        except ValueError:
-            menu_not_num = True
-
 def logged_in_user_menu(uuid):
     """Runs logged in user menu.
 
@@ -374,7 +286,7 @@ def logged_in_user_menu(uuid):
         try:
             if int(choice) == 1:
                 # allows user to READ/REPLY to all chirps they have access to
-                view_all_chirps_menu(uuid)
+                view_chirps_menu(uuid)
                 break
             elif int(choice) == 2:
                 # allows a user to WRITE a new public chirp and start a new chirp thread
@@ -398,17 +310,15 @@ def logged_in_user_menu(uuid):
             # user has picked NaN, toggle global variable
             menu_not_num = True
 
-def view_all_chirps_menu(uuid):
+def view_chirps_menu(uuid):
     """Runs all chirps menu.
 
     Actions:
     - displays all chirps marked "public"
     - displays all chirps marked "private" and addressed to the user
+    - if anonymous user, only displays public
     - routes user to expanded chirp thread
     """
-    # view_chirps_menu(uuid):
-        #
-
     # menu error variables to toggle visible error states from within while loop
     menu_error = False
     menu_not_num = False
@@ -417,10 +327,6 @@ def view_all_chirps_menu(uuid):
 
         # clears the command line/shell of other text outside of what prints in the while loop
         os.system('cls' if os.name == 'nt' else 'clear')
-
-        # runs loop to read and print first part of first chirp in each chirp convo
-        # last chirp from the last 10 UPDATED convos
-        # could also use enumerate
 
         last_chirps = list()
 
@@ -451,9 +357,17 @@ def view_all_chirps_menu(uuid):
         last_ten_public = sorted_public_chirps[:10]
         last_ten_private = sorted_private_chirps[:10]
 
-        print("CHIRPS: PUBLIC AND PRIVATE")
+        if uuid is None:
+            print("CHIRPS: * PUBLIC ONLY *")
+        else:
+            print("CHIRPS: PUBLIC AND PRIVATE")
+
         print("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-        print("*Showing most recent chirp from last ten public and private conversations*")
+        print("* Showing most recent chirp from last ten public and private conversations *")
+
+        if uuid is None:
+            print("* Please return to main menu and select a user to reply to chirps *")
+
         print("")
         print("PUBLIC CONVERSATIONS:")
         print("---------------------")
@@ -466,25 +380,27 @@ def view_all_chirps_menu(uuid):
             timestamp = services.readable_time(current_chirp.timestamp)
 
             chirp.append(counter)
-            print("{}/{}/{} - {}:{} {}".format(*timestamp))
-            print("{}. {}".format(counter, current_chirp.text))
-            print("")
+            print(counter, end="")
+            print(". {}/{}/{} - {}:{} {}".format(*timestamp), end="")
+            print(": {}".format(current_chirp.text))
             counter += 1
 
-        print("")
-        print("PRIVATE CONVERSATIONS:")
-        print("----------------------")
-
-        for chirp in last_ten_private:
-            current_chirp = CHIRP_LIST[chirp[1]]
-
-            timestamp = services.readable_time(current_chirp.timestamp)
-
-            chirp.append(counter)
-            print("{}/{}/{} - {}:{} {}".format(*timestamp))
-            print("{}. {}".format(counter, current_chirp.text))
+        if uuid is not None:
             print("")
-            counter += 1
+            print("PRIVATE CONVERSATIONS:")
+            print("----------------------")
+
+            for chirp in last_ten_private:
+                current_chirp = CHIRP_LIST[chirp[1]]
+
+                timestamp = services.readable_time(current_chirp.timestamp)
+
+                chirp.append(counter)
+                print(counter, end="")
+                print(". {}/{}/{} - {}:{} {}".format(*timestamp), end="")
+                print(": {}".format(current_chirp.text))
+
+                counter += 1
 
         print("")
         print("{}. RETURN TO PREVIOUS MENU".format(counter))
@@ -503,7 +419,10 @@ def view_all_chirps_menu(uuid):
         # else if choice is in the counter range grab the corresponding chirp in either list
         # toggles the error variables if the user has picked something outside of the range
         try:
-            if int(choice) == counter:
+            if int(choice) == counter and uuid is None:
+                main_menu_start()
+                break
+            elif int(choice) == counter and uuid is not None:
                 logged_in_user_menu(uuid)
                 break
             elif int(choice) in range(1, counter):
@@ -519,7 +438,7 @@ def view_all_chirps_menu(uuid):
         except ValueError:
             menu_not_num = True
 
-def view_chirp_thread(uuid, chirp_id, can_edit=True):
+def view_chirp_thread(uuid, chirp_id):
     """Runs view chirp thread menu.
 
     Arguments:
@@ -551,7 +470,7 @@ def view_chirp_thread(uuid, chirp_id, can_edit=True):
         print("~~~~~~~~~~~~")
         print("*Displaying chirps oldest to newest*")
 
-        if can_edit is False:
+        if uuid is None:
             print("*Please return to the main menu and login in order to reply to this thread*")
 
         print("")
@@ -564,11 +483,10 @@ def view_chirp_thread(uuid, chirp_id, can_edit=True):
             timestamp = services.readable_time(chirp[0])
 
             print("{}/{}/{} - {}:{} {}".format(*timestamp))
-            print("--------------------------------------")
             print(USER_LIST[chirp[2]].screenname, " --- ", chirp[1])
             print("")
 
-        if can_edit is False:
+        if uuid is None:
             print("1. RETURN TO PREVIOUS MENU")
         else:
             print("1. REPLY")
@@ -587,14 +505,14 @@ def view_chirp_thread(uuid, chirp_id, can_edit=True):
         choice = input("> ")
 
         try:
-            if int(choice) == 1 and can_edit is True:
+            if int(choice) == 1 and uuid is not None:
                 reply_to_thread_menu(uuid, CHIRP_LIST[chirp_id].convo_id)
                 break
-            elif int(choice) == 1 and can_edit is False:
-                view_public_menu()
+            elif int(choice) == 1 and uuid is None:
+                view_chirps_menu(None)
                 break
-            elif int(choice) == 2 and can_edit is True:
-                view_all_chirps_menu(uuid)
+            elif int(choice) == 2 and uuid is not None:
+                view_chirps_menu(uuid)
                 break
             else:
                 menu_error = True
