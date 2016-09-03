@@ -15,7 +15,6 @@ class Chirp:
         - convo_id - foreign id from associated conversation
         - chirp_text - text of chirp passed in from new_chirp functions or chirp replies in menus.py
         """
-
         self.user_id = user_id
         self.convo_id = convo_id
         self.text = chirp_text

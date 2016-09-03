@@ -14,7 +14,6 @@ class Conversation:
         - allowed_users - two user_ids for users allowed to access a private convo
         - public_status - whether or not a conversation is public
         """
-
         self.allowed_users = allowed_users
         self.public_status = public_status
         # creates a new, unique uuid and saves it as a string instead of a uuid object

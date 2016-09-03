@@ -13,7 +13,6 @@ class User:
         - name - contents of name variable from menus.py in new_user_menu function
         - screenname - contents of screenname variable from menus.py in new_user_menu function
         """
-
         self.name = name
         self.screenname = screenname
         # creates a new, unique uuid and saves it as a string instead of a uuid object

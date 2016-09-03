@@ -11,7 +11,6 @@ def deserialize(filename):
     Arguments:
     - filename - name of file deserialized content is being read from
     """
-
     # will load last dump (which is entire serialized file)
     try:
         file = open(filename, 'rb')
@@ -28,7 +27,6 @@ def serialize(filename, content):
     - filename - name of file serialized content is being written to
     - content - content being serialized
     """
-
     # re-writes the whole users.txt file with whatever is currently being held in user_list
     file = open(filename, 'wb')
     pickle.dump(content, file)
@@ -37,16 +35,15 @@ def readable_time(value):
     """makes the date/time object more readable
 
     Arguments:
-    -
+    - value - timestamp object provided by chirp
     """
-        # formats time to be more human readable
-    # could be a service function
     if value.hour > 12:
         hour = value.hour - 12
         time = "PM"
     else:
         hour = value.hour
         time = "AM"
+    # will format 11:03 as 11:3 if not accomodated for
     if value.minute < 10:
         minute = "0{}".format(value.minute)
     else:
@@ -58,4 +55,5 @@ def readable_time(value):
 
     formatted_value = (month, day, year, hour, minute, time)
 
+    # returns formatted tuple
     return formatted_value
