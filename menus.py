@@ -370,6 +370,10 @@ def view_chirps_menu(uuid):
             print(": {}".format(current_chirp.text))
             counter += 1
 
+        if len(sorted_public_chirps) > 10:
+            print("{}. VIEW MORE PUBLIC CONVERSATIONS".format(counter))
+            counter += 1
+
         if uuid is not None:
             print("")
             print("PRIVATE CONVERSATIONS:")
@@ -384,7 +388,10 @@ def view_chirps_menu(uuid):
                 print(counter, end="")
                 print(". {}/{}/{} - {}:{} {}".format(*timestamp), end="")
                 print(": {}".format(current_chirp.text))
+                counter += 1
 
+            if len(sorted_private_chirps) > 10:
+                print("{}. VIEW MORE PRIVATE CONVERSATIONS".format(counter))
                 counter += 1
 
         print("")
@@ -407,11 +414,118 @@ def view_chirps_menu(uuid):
             elif int(choice) == counter and uuid is not None:
                 logged_in_user_menu(uuid)
                 break
+            elif int(choice) == 11 and len(sorted_public_chirps) > 10:
+                view_more_chirps(uuid, "public")
+            elif int(choice) == (counter - 1) and len(sorted_private_chirps) > 10:
+                view_more_chirps(uuid, "private")
             elif int(choice) in range(1, counter):
                 for chirp in last_ten_public:
                     if int(choice) == chirp[2]:
                         view_chirp_thread(uuid, chirp[1])
                 for chirp in last_ten_private:
+                    if int(choice) == chirp[2]:
+                        view_chirp_thread(uuid, chirp[1])
+                break
+            else:
+                menu_error = True
+        except ValueError:
+            menu_not_num = True
+
+def view_more_chirps(uuid, chirp_type):
+    """Runs view more chirps menu.
+
+    Arguments:
+    - uuid - passed in uuid from user creation/selection
+    - chirp_type - determines if we are loading public or private chirps
+
+    Actions:
+    - displays last chirp of all conversations based of public/private status
+    - sorts them so they display in order of newest to oldest
+    - allows user to pick a thread to see more
+    """
+
+    if uuid is not None:
+        username = (USER_LIST[uuid].screenname).upper()
+
+    menu_error = False
+    menu_not_num = False
+
+    while True:
+        os.system('cls' if os.name == 'nt' else 'clear')
+
+        last_chirps = list()
+
+        # Had to rebuild chirp list because passed-in list inherited edits made to derivative lists
+        for key in CONVERSATIONS:
+            chirps_in_convo = list()
+            for value in CHIRP_LIST.values():
+                if key == value.convo_id:
+                    chirps_in_convo.append([value.timestamp, value.uuid])
+            sorted_chirps_by_time = sorted(chirps_in_convo, reverse=True)
+            last_chirps.append(sorted_chirps_by_time[0])
+
+        all_convo_list = list()
+
+        requested_chirp_type = True if chirp_type is "public" else False
+
+        for chirp in last_chirps:
+            current_convo_id = CHIRP_LIST[chirp[1]].convo_id
+            is_public = CONVERSATIONS[current_convo_id].public_status
+            if is_public == requested_chirp_type:
+                all_convo_list.append(chirp)
+            else:
+                continue
+
+        sorted_convo_list = sorted(all_convo_list, reverse=True)
+
+        print(sorted_convo_list)
+        print("\n")
+
+        if chirp_type == "private":
+            print("VIEWING ALL PRIVATE CONVERSATIONS ADDRESSED TO {}".format(username))
+            print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        else:
+            print("VIEWING ALL PUBLIC CONVERSATIONS")
+            print("~~~~~~~~~~~~~~~~~~~~~~~~~")
+
+        print("* Showing with most recently updated conversations at the top *")
+
+        if uuid is None:
+            print("* Please return to main menu and select a user to reply to chirps *")
+
+        print("")
+
+        counter = 1
+
+        for chirp in sorted_convo_list:
+            current_chirp = CHIRP_LIST[chirp[1]]
+
+            timestamp = services.readable_time(current_chirp.timestamp)
+
+            chirp.append(counter)
+            print(counter, end="")
+            print(". {}/{}/{} - {}:{} {}".format(*timestamp), end="")
+            print(": {}".format(current_chirp.text))
+            counter += 1
+
+        print("")
+        print("{}. RETURN TO PREVIOUS MENU".format(counter))
+        if menu_error is True:
+            menu_error = False
+            print("Please pick an available option!")
+
+        if menu_not_num is True:
+            menu_not_num = False
+            print("Please choose the number next to your chosen chirp!")
+
+        choice = input("> ")
+
+        try:
+            if int(choice) == counter:
+                view_chirps_menu(uuid)
+                break
+            elif int(choice) in range(1, counter):
+                for chirp in sorted_convo_list:
                     if int(choice) == chirp[2]:
                         view_chirp_thread(uuid, chirp[1])
                 break
